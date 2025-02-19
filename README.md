@@ -1,5 +1,7 @@
 # Open WebUI App
 
+![image](https://github.com/user-attachments/assets/90d51a0d-2381-47b0-9b33-4a886ea323ea)
+
 **Open WebUI App** is a desktop application built using Electron that provides an intuitive interface to interact with Open WebUI services. It supports both local and remote connections, offers customizable global hotkeys, and features a companion window for quick access.
 
 ---
