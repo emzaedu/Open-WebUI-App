@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #0D0D0D;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh; 
+      margin: 0;
+    }
+    .container {
+      display: flex;
+      align-items: center;
+      background-color: #262626;
+      color: #D1D5DB;
+      border-radius: .5rem;
+    }
+    #display {
+      display: inline-block;
+      width: 180px;
+      padding-top: .5rem;
+      padding-bottom: .5rem;
+      padding-left: 1rem;
+      padding-right: 1rem;
+      font-size: .875rem;
+      line-height: 1.25rem;
+      background-color: #262626;
+      color: #D1D5DB;
+      box-sizing: border-box;
+      text-align: center;
+      border-radius: .5rem;
+    }
+    button {
+      font-size: .875rem;
+      border: 0;
+      background-color: transparent;
+      color: #D1D5DB;
+      margin-left: 10px;
+      cursor: pointer;
+      transition: opacity 0.3s;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    button:not([disabled]) svg {
+      fill: #ECECEC;
+      transition: fill 0.3s;
+    }
+    button:not([disabled]):hover svg {
+      fill: green;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <span id="display">...</span>
+    <button id="saveButton" disabled>
+      <svg viewBox="0 0 24 24" width="24" height="24">
+        <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"></path>
+      </svg>
+    </button>
+  </div>
+  <script>
+    window.electron.send('disable-global-hotkey');
+    let currentKeys = new Set();
+    let currentCombination = [];
+    let recordedCombination = [];
+    const display = document.getElementById('display');
+    const saveButton = document.getElementById('saveButton');
+
+    function mapCodeToAccelerator(code) {
+      switch(code) {
+        case "ControlLeft":
+        case "ControlRight":
+          return "Control";
+        case "ShiftLeft":
+        case "ShiftRight":
+          return "Shift";
+        case "AltLeft":
+        case "AltRight":
+          return "Alt";
+        case "MetaLeft":
+        case "MetaRight":
+          return "Super";
+        default:
+          if (code.startsWith("Key")) {
+            return code.slice(3).toUpperCase();
+          }
+          if (code.startsWith("Digit")) {
+            return code.slice(5);
+          }
+          const mapping = {
+            "Comma": ",",
+            "Period": ".",
+            "Slash": "/",
+            "Backslash": "\\",
+            "Semicolon": ";",
+            "Quote": "'",
+            "BracketLeft": "[",
+            "BracketRight": "]",
+            "Minus": "-",
+            "Equal": "="
+          };
+          if (mapping[code]) return mapping[code];
+          return code;
+      }
+    }
+
+    function updateDisplay(keysArray) {
+      const acceleratorNames = keysArray.map(mapCodeToAccelerator);
+      display.textContent = acceleratorNames.length
+        ? acceleratorNames.join(" + ")
+        : "...";
+      if (acceleratorNames.length > 0) {
+        saveButton.disabled = false;
+      } else {
+        saveButton.disabled = true;
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      e.preventDefault();
+      if (currentKeys.size === 0) {
+        currentCombination = [];
+      }
+      currentKeys.add(e.code);
+      currentCombination = Array.from(currentKeys);
+      updateDisplay(currentCombination);
+    });
+
+    document.addEventListener('keyup', (e) => {
+      currentKeys.delete(e.code);
+      if (currentKeys.size === 0) {
+        recordedCombination = currentCombination.slice();
+        updateDisplay(recordedCombination);
+      }
+    });
+
+    saveButton.addEventListener('click', () => {
+      if (!recordedCombination.length) {
+        return;
+      }
+      const acceleratorArray = recordedCombination.map(mapCodeToAccelerator);
+      window.electron.send('save-hotkey', acceleratorArray);
+    });
+  </script>
+</body>
+</html>

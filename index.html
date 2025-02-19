@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="utf-8" />
+    <title>Open WebUI</title>
+    <style nonce="">
+        html {
+            overflow-y: hidden !important;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system,BlinkMacSystemFont,Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif,Helvetica Neue,Arial,"Apple Color Emoji","Segoe UI Emoji",Segoe UI Symbol,"Noto Color Emoji";
+        }
+        #splash-screen {
+            position: fixed;
+            z-index: 100;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        #splash-screen img {
+            filter: invert(1);
+        }
+        #logo {
+            width: auto;
+            height: 6rem;
+        }
+        #loading-container {
+            display: flex;
+            min-height: 1rem;
+        }
+        #loading-dots {
+            font-size: 4rem;
+            line-height: 1rem;
+            font-family: Archivo, sans-serif;
+            font-weight: 700;
+            margin-left: 0rem;
+            width: 1.65em;
+        }
+        #settings-icon {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            fill: #666;
+            transition: fill 0.3s ease;
+            z-index: 101;
+        }
+        #settings-icon:hover {
+            fill: #999;
+        }
+        #settings-modal {
+            display: none;
+            position: fixed;
+            top: 70px;
+            left: 20px;
+            width: 250px;
+            background: #171717;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            z-index: 200;
+            color: #D1D5DB;
+        }
+        #settings-modal.visible {
+            display: block;
+        }
+        .settings-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            color: #888;
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+        @keyframes pulse {
+            0%, 100% {
+                color: hsl(0, 0%, 30%);
+            }
+            50% {
+                color: hsl(0, 0%, 90%);
+            }
+        }
+        @keyframes fadeOut {
+            0% {
+                color: hsl(0, 0%, 90%);
+            }
+            100% {
+                color: hsl(0, 0%, 0%);
+            }
+        }
+        .animate-pulse-fast {
+            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        .animate-fade-out {
+            animation: fadeOut 1s ease-in-out forwards;
+        }
+        .container {
+            display: flex;
+            align-items: center;
+            background-color: #262626;
+            color: #D1D5DB;
+            border: 1px solid transparent;
+            border-radius: .5rem;
+        }
+        #defaultUrlInput {
+            display: inline-block;
+            padding-top: .5rem;
+            padding-bottom: .5rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
+            font-size: .875rem;
+            line-height: 1.25rem;
+            background-color: #262626;
+            color: #D1D5DB;
+            box-sizing: border-box;
+            border: 0;
+            border-radius: .5rem;
+            outline: none;
+        }
+        .container:focus-within {
+            border: 1px solid #D1D5DB;
+        }
+        button {
+            font-size: .875rem;
+            border: 0;
+            background-color: transparent;
+            color: #D1D5DB;
+            margin-left: 10px;
+            margin-right: 10px;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        button:not([disabled]) svg {
+            fill: #ECECEC;
+            transition: fill 0.3s;
+        }
+        button:not([disabled]):hover svg {
+            fill: green;
+        }
+        label {
+            font-size: 0.9rem;
+            line-height: 1.25rem;
+            font-family: Archivo, sans-serif;
+            font-weight: 600;
+            margin-left: 0.25rem;
+            width: 1.65em;
+        }
+    </style>
+</head>
+<body data-sveltekit-preload-data="hover">
+    <!--
+    <svg id="settings-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+        <path fill-rule="evenodd" d="M8.34 1.804A1 1 0 019.32 1h1.36a1 1 0 01.98.804l.295 1.473c.497.144.971.342 1.416.587l1.25-.834a1 1 0 011.262.125l.962.962a1 1 0 01.125 1.262l-.834 1.25c.245.445.443.919.587 1.416l1.473.294a1 1 0 01.804.98v1.361a1 1 0 01-.804.98l-1.473.295a6.95 6.95 0 01-.587 1.416l.834 1.25a1 1 0 01-.125 1.262l-.962.962a1 1 0 01-1.262.125l-1.25-.834a6.953 6.953 0 01-1.416.587l-.294 1.473a1 1 0 01-.98.804H9.32a1 1 0 01-.98-.804l-.295-1.473a6.957 6.957 0 01-1.416-.587l-1.25.834a1 1 0 01-1.262-.125l-.962-.962a1 1 0 01-.125-1.262l.834-1.25a6.957 6.957 0 01-.587-1.416l-1.473-.294A1 1 0 011 10.68V9.32a1 1 0 01.804-.98l1.473-.295c.144-.497.342-.971.587-1.416l-.834-1.25a1 1 0 01.125-1.262l.962-.962A1 1 0 015.38 3.03l1.25.834a6.957 6.957 0 011.416-.587l.294-1.473zM13 10a3 3 0 11-6 0 3 3 0 016 0z" clip-rule="evenodd"></path>
+    </svg>
+    <div id="settings-modal">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="settings-close w-5 h-5">
+            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z">
+            </path>
+        </svg>
+        <label for="defaultUrlInput">Open WebUI URL</label>
+        <div class="container">
+            <input id="defaultUrlInput" type="text" value="http://127.0.0.1:19999">
+            <button id="saveSettings">
+              <svg viewBox="0 0 24 24" width="24" height="24">
+                <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"></path>
+              </svg>
+            </button>
+        </div>
+    </div>
+    -->
+    <div id="splash-screen">
+        <img id="logo" src="static/splash.png" alt="Logo" />
+        <div id="loading-container">
+            <span id="loading-dots" class="animate-pulse-fast"></span>
+        </div>
+    </div>
+
+    <script>
+        let dots = ['', '.', '..', '...', '....', '.....','......'];
+        let i = 0;
+        let loadingDotsElement = document.getElementById('loading-dots');
+
+        function updateDots() {
+            if (i === dots.length) {
+                loadingDotsElement.classList.remove('animate-pulse-fast');
+                loadingDotsElement.classList.add('animate-fade-out');
+                setTimeout(() => {
+                    loadingDotsElement.textContent = dots[0];
+                    loadingDotsElement.classList.remove('animate-fade-out');
+                    loadingDotsElement.classList.add('animate-pulse-fast');
+                    i = 0;
+                }, 1000);
+            } else {
+                loadingDotsElement.textContent = dots[i];
+                i++;
+            }
+        }
+
+        setInterval(updateDots, 500);
+        const settingsIcon = document.getElementById('settings-icon');
+        const settingsModal = document.getElementById('settings-modal');
+        const settingsClose = document.querySelector('.settings-close');
+        
+        settingsIcon.addEventListener('click', async () => {
+            const currentUrl = await window.electron.invoke('get-default-url');
+            document.getElementById('defaultUrlInput').value = currentUrl;
+            settingsModal.classList.toggle('visible');
+        });
+
+        settingsClose.addEventListener('click', () => {
+            settingsModal.classList.remove('visible');
+        });
+
+        document.getElementById('saveSettings').addEventListener('click', () => {
+            const newUrl = document.getElementById('defaultUrlInput').value;
+            window.electron.send('save-default-url', newUrl);
+            settingsModal.classList.remove('visible');
+        });
+    </script>
+</body>
+</html>

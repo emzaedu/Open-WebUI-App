@@ -1,0 +1,43 @@
+{
+  "name": "OpenUI",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "asar": false,
+    "appId": "com.openui.app",
+    "win": {
+      "target": [
+        {
+          "target": "dir",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target" : "zip",
+          "arch" : [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "app.ico"
+    },
+    "icon": "app.ico"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "OpenUI application",
+  "devDependencies": {
+    "electron": "*",
+    "electron-builder": "*"
+  },
+  "dependencies": {
+    "tree-kill": "*",
+    "winreg": "*"
+  }
+}

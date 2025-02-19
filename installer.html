@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8">
+  <title data-i18n="installer.title"></title>
+  <style nonce="">
+    body {
+      background-color: #0D0D0D;
+      color: #D1D5DB;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+    }
+    .installer-container {
+      background-color: #262626;
+      padding: 20px;
+      margin-top: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      width: 90%;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+    h1, h2, p, label, button {
+      margin: 0 0 1rem 0;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    .section {
+      margin-top: 20px;
+      border-top: 1px solid #444;
+      padding-top: 20px;
+      display: none;
+    }
+    .section.active {
+      display: block;
+    }
+    input[type="text"],
+    input[type="number"],
+    input[type="url"] {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #444;
+      border-radius: 4px;
+      background-color: #171717;
+      color: #D1D5DB;
+    }
+    input[type="radio"],
+    input[type="checkbox"] {
+      margin-right: 8px;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      background-color: #262626;
+      border: 1px solid #444;
+      color: #D1D5DB;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #333;
+    }
+    #log {
+      background-color: #171717;
+      border: 1px solid #444;
+      padding: 10px;
+      height: 250px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 0.875rem;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="installer-container">
+    <h1 data-i18n="installer.heading"></h1>
+    <div id="chooseLaunchType">
+      <p data-i18n="installer.chooseLaunchType"></p>
+      <label>
+        <input type="radio" name="installType" value="remote" checked>
+        <span data-i18n="installer.remoteOption"></span>
+      </label>
+      <label>
+        <input type="radio" name="installType" value="local">
+        <span data-i18n="installer.localOption"></span>
+      </label>
+    </div>
+    <div id="remoteSection" class="section active">
+      <label for="remoteUrl" data-i18n="installer.remoteUrlLabel"></label>
+      <input type="url" id="remoteUrl" placeholder="http://example.com:port" required>
+      <button id="remoteInstallButton" data-i18n="installer.confirmButton"></button>
+    </div>
+    
+    <div id="localSection" class="section">
+      <h2 data-i18n="installer.localTitle"></h2>
+      <label data-i18n="installer.serviceAvailability"></label>
+      <label>
+        <input type="radio" name="hostOption" value="127.0.0.1" checked>
+        <span data-i18n="installer.onlyForMe"></span>
+      </label>
+      <label>
+        <input type="radio" name="hostOption" value="0.0.0.0">
+        <span data-i18n="installer.publicOption"></span>
+      </label>
+      
+      <label for="portInput" data-i18n="installer.portLabel"></label>
+      <input type="number" id="portInput" value="19999" min="1" max="65535">
+      
+      <label>
+        <input type="checkbox" id="chatSaveCheckbox">
+        <span data-i18n="installer.enableRealtimeChat"></span>
+      </label>
+      <label>
+        <input type="checkbox" id="webuiAuthCheckbox">
+        <span data-i18n="installer.noAuth"></span>
+      </label>
+      <label>
+        <input type="checkbox" id="telemetryCheckbox">
+        <span data-i18n="installer.anonymousTelemetry"></span>
+      </label>
+      <label>
+        <input type="checkbox" id="scarfAnalyticsCheckbox">
+        <span data-i18n="installer.disableScarfAnalytics"></span>
+      </label>
+      
+      <label for="ollamaUrlInput" data-i18n="installer.ollamaUrlLabel"></label>
+      <input type="url" id="ollamaUrlInput" value="http://127.0.0.1:11434">
+      
+      <label for="openaiApiBaseInput" data-i18n="installer.openaiApiBaseLabel"></label>
+      <input type="url" id="openaiApiBaseInput" placeholder="https://api.openai.com">
+      
+      <label for="openaiApiKeyInput" data-i18n="installer.openaiApiKeyLabel"></label>
+      <input type="text" id="openaiApiKeyInput" placeholder="API Key">
+      
+      <label>
+        <input type="checkbox" id="updateCheckbox" checked>
+        <span data-i18n="installer.updateOnStartup"></span>
+      </label>
+      
+      <button id="localInstallButton" data-i18n="installer.installAndConfigure"></button>
+    </div>
+    <div id="installationProgress" class="section" style="display:none;">
+      <p data-i18n="installer.installationProgress"></p>
+      <div id="log"></div>
+      <button id="restartButton" style="display:none;" data-i18n="installer.restartApp"></button>
+    </div>
+  </div>
+  
+  <script>
+    function applyTranslations() {
+      if (!window.translations) return;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (window.translations[key]) {
+          if (el.tagName.toLowerCase() === 'input' && el.hasAttribute('placeholder')) {
+            el.setAttribute('placeholder', window.translations[key]);
+          } else {
+            el.textContent = window.translations[key];
+          }
+        }
+      });
+    }
+    
+    if (!window.translations) {
+      window.electron.invoke('get-translations').then(trans => {
+        window.translations = trans;
+        applyTranslations();
+      }).catch(err => console.error(err));
+    } else {
+      applyTranslations();
+    }
+    
+    const remoteRadio = document.querySelector('input[name="installType"][value="remote"]');
+    const localRadio = document.querySelector('input[name="installType"][value="local"]');
+    const remoteSection = document.getElementById('remoteSection');
+    const localSection = document.getElementById('localSection');
+    const logDiv = document.getElementById('log');
+    const restartButton = document.getElementById('restartButton');
+    
+    document.querySelectorAll('input[name="installType"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        if(remoteRadio.checked) {
+          remoteSection.classList.add('active');
+          localSection.classList.remove('active');
+        } else {
+          remoteSection.classList.remove('active');
+          localSection.classList.add('active');
+        }
+      });
+    });
+    
+    function log(message) {
+      logDiv.innerHTML += message + '<br>';
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+    
+    document.getElementById('remoteInstallButton').addEventListener('click', () => {
+      const remoteUrl = document.getElementById('remoteUrl').value.trim();
+      if(!remoteUrl) {
+        log(window.translations ? window.translations['installer.enterRemoteUrl'] : 'Please enter remote URL.');
+        return;
+      }
+      document.getElementById('remoteInstallButton').disabled = true;
+      window.electron.send('remote-installation', remoteUrl);
+    });
+    
+    document.getElementById('localInstallButton').addEventListener('click', () => {
+      document.getElementById('localInstallButton').disabled = true;
+      document.getElementById('installationProgress').style.display = 'block';
+      document.getElementById('localSection').style.display = 'none';
+      document.getElementById('chooseLaunchType').style.display = 'none';
+      
+
+      const host = document.querySelector('input[name="hostOption"]:checked').value;
+      const port = document.getElementById('portInput').value.trim() || '19999';
+      const chatSave = document.getElementById('chatSaveCheckbox').checked;
+      const webuiAuth = !document.getElementById('webuiAuthCheckbox').checked;
+      const telemetry = document.getElementById('telemetryCheckbox').checked;
+      const scarfAnalytics = document.getElementById('scarfAnalyticsCheckbox').checked;
+      const ollamaUrl = document.getElementById('ollamaUrlInput').value.trim();
+      const openaiApiBase = document.getElementById('openaiApiBaseInput').value.trim();
+      const openaiApiKey = document.getElementById('openaiApiKeyInput').value.trim();
+      const updateEnabled = document.getElementById('updateCheckbox').checked;
+
+      window.electron.send('local-installation', {
+        host,
+        port,
+        chatSave,
+        webuiAuth,
+        telemetry,
+        scarfAnalytics,
+        ollamaUrl,
+        openaiApiBase,
+        openaiApiKey,
+        updateEnabled
+      });
+    });
+
+    
+    window.electron.receive('installation-log', (event, data) => {
+      log(data);
+    });
+    
+    window.electron.receive('installation-result', (event, success) => {
+      if(success) {
+        log(window.translations ? window.translations['installer.installationSuccess'] : 'Installation completed successfully.');
+        restartButton.style.display = 'block';
+      } else {
+        log(window.translations ? window.translations['installer.installationFailure'] : 'Installation failed. Please check settings and try again.');
+      }
+    });
+    
+    restartButton.addEventListener('click', () => {
+      window.electron.send('restart-app');
+    });
+  </script>
+</body>
+</html>
