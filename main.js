@@ -91,7 +91,7 @@ function loadWindowConfig(confPath) {
     return JSON.parse(fs.readFileSync(confPath, 'utf8'));
   } catch (e) {
     return confPath === companionWindowConfigPath ?
-      { width: 600, height: 800, lastUrl: getEffectiveUrl(), x: undefined, y: undefined } :
+      { width: 700, height: 800, lastUrl: getEffectiveUrl(), x: undefined, y: undefined } :
       { width: 1280, height: 900, lastUrl: getEffectiveUrl(), x: undefined, y: undefined };
   }
 }
@@ -127,33 +127,60 @@ function getBatFilePath(batFileName) {
 function updateGlobalHotkeys() {
   globalShortcut.unregisterAll();
   if (!serviceReady) return;
-
+  
   const anyFocused = (mainWindow && mainWindow.isFocused()) ||
                      (companionWindow && companionWindow.isFocused()) ||
                      (hotkeyWindow && hotkeyWindow.isFocused());
-
+  
   if (anyFocused) {
-    globalShortcut.register('Ctrl+N', () => {
+    globalShortcut.register('CommandOrControl+N', () => {
       if (mainWindow && mainWindow.isFocused()) {
-        mainWindow.webContents.executeJavaScript(`document.getElementById('sidebar-new-chat-button').click();document.getElementById('chat-input').focus();`);
+        mainWindow.webContents.executeJavaScript(
+          `document.getElementById('sidebar-new-chat-button').click();document.getElementById('chat-input').focus();`
+        );
       } else if (companionWindow && companionWindow.isFocused()) {
-        companionWindow.webContents.executeJavaScript(`document.getElementById('sidebar-new-chat-button').click();document.getElementById('chat-input').focus();`);
+        companionWindow.webContents.executeJavaScript(
+          `document.getElementById('sidebar-new-chat-button').click();document.getElementById('chat-input').focus();`
+        );
       }
     });
-    globalShortcut.register('Ctrl+W', () => {
-      if (mainWindow && mainWindow.isFocused()) {
-        mainWindow.close();
-      } else if (companionWindow && companionWindow.isFocused()) {
-        companionWindow.close();
+    globalShortcut.register('CommandOrControl+W', () => {
+      if (mainWindow && mainWindow.isFocused()) mainWindow.close();
+      else if (companionWindow && companionWindow.isFocused()) companionWindow.close();
+    });
+    globalShortcut.register('CommandOrControl+Q', quitApp);
+    
+    globalShortcut.register('CommandOrControl+=', () => {
+      const focusedWindow = BrowserWindow.getFocusedWindow();
+      if (focusedWindow) {
+        let currentZoom = focusedWindow.webContents.getZoomFactor();
+        focusedWindow.webContents.setZoomFactor(currentZoom + 0.1);
       }
     });
-    globalShortcut.register('Ctrl+Q', quitApp);
+    
+    globalShortcut.register('CommandOrControl+-', () => {
+      const focusedWindow = BrowserWindow.getFocusedWindow();
+      if (focusedWindow) {
+        let currentZoom = focusedWindow.webContents.getZoomFactor();
+        if (currentZoom > 0.2) {
+          focusedWindow.webContents.setZoomFactor(currentZoom - 0.1);
+        }
+      }
+    });
+    
+    globalShortcut.register('CommandOrControl+0', () => {
+      const focusedWindow = BrowserWindow.getFocusedWindow();
+      if (focusedWindow) {
+        focusedWindow.webContents.setZoomFactor(1.0);
+      }
+    });
   }
-
+  
   if (currentCompanionHotkey) {
     globalShortcut.register(currentCompanionHotkey, toggleCompanionWindow);
   }
 }
+
 
 function attachFocusBlurListeners(win) {
   if (!win) return;
