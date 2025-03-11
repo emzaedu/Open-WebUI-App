@@ -652,3 +652,9 @@ app.on('activate', () => {
     mainWindow.focus();
   } else createMainWindow();
 });
+app.on('browser-window-focus', () => {
+  updateGlobalHotkeys();
+});
+app.on('browser-window-blur', () => {
+  updateGlobalHotkeys();
+});
