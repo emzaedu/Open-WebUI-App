@@ -125,48 +125,33 @@ function getBatFilePath(batFileName) {
 }
 
 function updateGlobalHotkeys() {
+  globalShortcut.unregisterAll();
   if (!serviceReady) return;
-  if (currentCompanionHotkey && !globalShortcut.isRegistered(currentCompanionHotkey)) {
-    globalShortcut.register(currentCompanionHotkey, toggleCompanionWindow);
-  }
 
-  const mainFocused = mainWindow && !mainWindow.isDestroyed() && mainWindow.isFocused();
-  const companionFocused = companionWindow && !companionWindow.isDestroyed() && companionWindow.isFocused();
-  const hotkeyFocused = hotkeyWindow && !hotkeyWindow.isDestroyed() && hotkeyWindow.isFocused();
-  const anyFocused = mainFocused || companionFocused || hotkeyFocused;
+  const anyFocused = (mainWindow && mainWindow.isFocused()) ||
+                     (companionWindow && companionWindow.isFocused()) ||
+                     (hotkeyWindow && hotkeyWindow.isFocused());
 
   if (anyFocused) {
-    if (!globalShortcut.isRegistered('Ctrl+N')) {
-      globalShortcut.register('Ctrl+N', () => {
-        if (mainWindow && mainWindow.isFocused()) {
-          mainWindow.webContents.executeJavaScript(`
-            document.getElementById('sidebar-new-chat-button').click();
-            document.getElementById('chat-input').focus();
-          `);
-        } else if (companionWindow && companionWindow.isFocused()) {
-          companionWindow.webContents.executeJavaScript(`
-            document.getElementById('sidebar-new-chat-button').click();
-            document.getElementById('chat-input').focus();
-          `);
-        }
-      });
-    }
-    if (!globalShortcut.isRegistered('Ctrl+W')) {
-      globalShortcut.register('Ctrl+W', () => {
-        if (mainWindow && mainWindow.isFocused()) {
-          mainWindow.close();
-        } else if (companionWindow && companionWindow.isFocused()) {
-          companionWindow.close();
-        }
-      });
-    }
-    if (!globalShortcut.isRegistered('Ctrl+Q')) {
-      globalShortcut.register('Ctrl+Q', quitApp);
-    }
-  } else {
-    if (globalShortcut.isRegistered('Ctrl+N')) globalShortcut.unregister('Ctrl+N');
-    if (globalShortcut.isRegistered('Ctrl+W')) globalShortcut.unregister('Ctrl+W');
-    if (globalShortcut.isRegistered('Ctrl+Q')) globalShortcut.unregister('Ctrl+Q');
+    globalShortcut.register('Ctrl+N', () => {
+      if (mainWindow && mainWindow.isFocused()) {
+        mainWindow.webContents.executeJavaScript(`document.getElementById('sidebar-new-chat-button').click();document.getElementById('chat-input').focus();`);
+      } else if (companionWindow && companionWindow.isFocused()) {
+        companionWindow.webContents.executeJavaScript(`document.getElementById('sidebar-new-chat-button').click();document.getElementById('chat-input').focus();`);
+      }
+    });
+    globalShortcut.register('Ctrl+W', () => {
+      if (mainWindow && mainWindow.isFocused()) {
+        mainWindow.close();
+      } else if (companionWindow && companionWindow.isFocused()) {
+        companionWindow.close();
+      }
+    });
+    globalShortcut.register('Ctrl+Q', quitApp);
+  }
+
+  if (currentCompanionHotkey) {
+    globalShortcut.register(currentCompanionHotkey, toggleCompanionWindow);
   }
 }
 
