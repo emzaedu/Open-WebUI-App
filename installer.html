@@ -255,6 +255,7 @@
       if(success) {
         log(window.translations ? window.translations['installer.installationSuccess'] : 'Installation completed successfully.');
         restartButton.style.display = 'block';
+        window.electron.send('restart-app');
       } else {
         log(window.translations ? window.translations['installer.installationFailure'] : 'Installation failed. Please check settings and try again.');
       }
